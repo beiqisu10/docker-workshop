@@ -2,9 +2,9 @@
 # coding: utf-8
 
 import pandas as pd
+import click
 from sqlalchemy import create_engine
 from tqdm import tqdm
-
 
 
 dtype = {
@@ -31,22 +31,23 @@ parse_dates = [
     "tpep_dropoff_datetime"
 ]
 
-
-def run():
-    pg_user = 'postgres'
-    pg_password = 'postgres'
-    pg_host = 'localhost'
-    pg_port = 15432
-    pg_db = 'student'
-    target_table = 'yellow_taxi_data'
+@click.command()
+@click.option('--user', default='postgres', help='PostgreSQL user')
+@click.option('--password', default='postgres', help='PostgreSQL password')
+@click.option('--host', default='localhost', help='PostgreSQL host')
+@click.option('--port', default=5432, type=int, help='PostgreSQL port')
+@click.option('--db', default='ny_taxi', help='PostgreSQL database name')
+@click.option('--table', default='yellow_taxi_trips', help='Target table name')
+@click.option('--url', default='', help='Download url')
+def run(user, password, host, port, db, table, url):
 
     year = 2021
     month = 1
 
-    prefix = 'https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow'
-    url = f'{prefix}/yellow_tripdata_{year}-{month:02d}.csv.gz'
+    # prefix = 'https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow'
+    # url = f'{prefix}/yellow_tripdata_{year}-{month:02d}.csv.gz'
 
-    engine = create_engine(f'postgresql+psycopg://{pg_user}:{pg_password}@{pg_host}:{pg_port}/{pg_db}')
+    engine = create_engine(f'postgresql+psycopg://{user}:{password}@{host}:{port}/{db}')
 
     print(engine)
     print(url)
@@ -67,7 +68,7 @@ def run():
         if first:
             # Create table schema (no data)
             df_chunk.head(0).to_sql(
-                name=target_table,
+                name=table,
                 con=engine,
                 if_exists="replace"
             )
@@ -76,7 +77,7 @@ def run():
 
         # Insert chunk
         df_chunk.to_sql(
-            name=target_table,
+            name=table,
             con=engine,
             if_exists="append"
         )
